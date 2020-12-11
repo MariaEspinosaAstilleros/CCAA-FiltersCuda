@@ -7,11 +7,15 @@
 
 int main(int argc, char** argv){
 
-    std::string file_path;
-    std::cout << "Enter the path of the image:" << std::endl; 
-    std::cin >> file_path; 
+    if(argc != 2){
+        std::cout << "Invalid number of command line arguments..." << std::endl;
+        std::cout << "Usage: " << argv[0] << " [image.png]"<< std::endl;
+        return EXIT_FAILURE;
+    } 
 
-    Filter image(file_path);
+    Filter image(argv[1]);
+    image.sobel_filter();
+    image.write("img/outSobel.jpg");
 
-    return 0;
+    return EXIT_SUCCESS;
 }

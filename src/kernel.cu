@@ -1,24 +1,23 @@
-#include <opencv4/opencv2/imgcodecs.hpp>
-#include <iostream>
+#include <stdio.h>
+
+#include "../include/Filter.h"
+#include "../include/kernel.h"
 
 //kernel sobel filter
-__global__ void kernel_filters(unsigned char* src_img, unsigned char* dst_img, unsigned int width, unsigned int heigth){
+__global__ void kernel_filter(void){
 
-    /*Gradients of the sobel filter*/
-    int gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
-    int gy[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
+    //Gradients of the sobel filter
+    //int gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+    //int gy[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
     
-    int x = blockId.x * blockDim.x + threadId.x; 
-    int y = blockId.y * blockDim.y + threadd.y;
+    int x = blockIdx.x * blockDim.x + threadIdx.x; 
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    printf("Hola jeje");
+    printf("holaaa %d %d", x, y);
 
-}
-
-__host__ void Filter::sobel_filter(){
 
 }
 
-/*__host__ void Filter::robert_filter(){
-
-}*/
+__host__ void Filter::sobel(){
+    kernel_filter<<<1, 1>>>();
+}

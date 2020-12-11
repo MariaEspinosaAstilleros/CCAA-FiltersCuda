@@ -11,7 +11,7 @@ NVCCFLAGS = -gencode arch=compute_61,code=sm_61
 INCLUDES = `pkg-config --cflags opencv4` -I/usr/local/cuda/include/ -I$(PREFIX)
 LIBS = `pkg-config --libs opencv4` -L/usr/local/cuda/libs/ -lcuda -lm 
 
-SOURCE = main.cpp
+SOURCE = main.cpp Filter.cpp
 KERNEL = kernel.cu
 OBJS = $(SOURCE:.cpp=.o) $(KERNEL:.cu=.o)
 TARGET = filter_sobel
