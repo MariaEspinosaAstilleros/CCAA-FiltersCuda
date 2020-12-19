@@ -1,4 +1,5 @@
-PREFIX =./src/
+DIRSRC =src/
+DIROBJ = obj/
 
 CC = g++
 CFLAGS = -I -c -pthread -std=c++11
@@ -8,25 +9,28 @@ NVCCFLAGS = -gencode arch=compute_61,code=sm_61
 
 # Change here with the correct path for the CUDA and OpenCV installation
 # (pkg-config will try to find the opencv4 installation)
-INCLUDES = `pkg-config --cflags opencv4` -I/usr/local/cuda/include/ -I$(PREFIX)
+INCLUDES = `pkg-config --cflags opencv4` -I/usr/local/cuda/include/ -I$(DIRSRC)
 LIBS = `pkg-config --libs opencv4` -L/usr/local/cuda/libs/ -lcuda -lm 
 
-SOURCE = main.cpp Filter.cpp
-KERNEL = kernel.cu
-OBJS = $(SOURCE:.cpp=.o) $(KERNEL:.cu=.o)
+#SOURCE = main.cpp
+KERNEL = kernel_photo.cu
+OBJS = $(KERNEL:.cu=.o) #$(SOURCE:.cpp=.o) $(KERNEL:.cu=.o)
 TARGET = filter_sobel
 
-all: $(TARGET)
+all: dirs $(TARGET) 
+
+dirs:
+	mkdir obj
 
 $(TARGET): $(OBJS)
-	$(NVCC) $(NVCCFLAGS) $^ -o $@ $(INCLUDES) $(LIBS)
+	$(NVCC) $(NVCCFLAGS) $(DIROBJ)$^ -o $@ $(INCLUDES) $(LIBS)
 
-%.o: $(PREFIX)/%.cu
-	$(NVCC) $(NVCCFLAGS) -c $^ -o $@ $(INCLUDES)
+%.o: $(DIRSRC)/%.cu
+	$(NVCC) $(NVCCFLAGS) -c $^ -o $(DIROBJ)$@ $(INCLUDES)
 
-%.o: $(PREFIX)/%.cpp
-	$(CC) $(CFLAGS) -c $^ -o $@ $(INCLUDES) $(LIBS)
+%.o: $(DIRSRC)/%.cpp
+	$(CC) $(CFLAGS) -c $^ -o $(DIROBJ)$@ $(INCLUDES) $(LIBS)
 		
 clean:
 	touch $(TARGET)
-	rm *.o $(TARGET)
+	rm -r $(DIROBJ) $(TARGET)
