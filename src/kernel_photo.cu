@@ -14,33 +14,38 @@
 #define BLOCK_SIZE 32
 #define GRID_SIZE 128
 
-/*Device function*/
-__device__ int absValue(int num){
-    return (num < 0) ? -1 * num : num;
-}
-
 /*Kernel*/
-__global__ void kernel_convolution_sobel(char* src_img, char* dst_img, int width_img, int height_img){
+__global__ void kernel_convolution_sobel(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img){
 
     //Gradients of the sobel filter
     int gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     int gy[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
     
-    int num_col = blockIdx.x * blockDim.x + threadIdx.x;
-    int num_row = blockIdx.y * blockDim.y + threadIdx.y;
+    int num_row = blockIdx.x * blockDim.x + threadIdx.x;
+    int num_col = blockIdx.y * blockDim.y + threadIdx.y;
 
     int index = num_row * width_img + num_col;
 
     if(num_col < (width_img - 1) && num_row < (height_img - 1)) {
-        int grad_x= (src_img[index] * gx[0][0]) + (src_img[index+1] * gx[0][1]) + (src_img[index+2] * gx[0][2]) +
-                    (src_img[index] * gx[1][0]) + (src_img[index+1] * gx[1][1]) + (src_img[index+2] * gx[1][2]) +
-                    (src_img[index] * gx[2][0]) + (src_img[index+1] * gx[2][1]) + (src_img[index+2] * gx[2][2]);
+        float grad_x= (src_img[index] * gx[0][0]) + (src_img[index+1] * gx[0][1]) + (src_img[index+2] * gx[0][2]) +
+                      (src_img[index] * gx[1][0]) + (src_img[index+1] * gx[1][1]) + (src_img[index+2] * gx[1][2]) +
+                      (src_img[index] * gx[2][0]) + (src_img[index+1] * gx[2][1]) + (src_img[index+2] * gx[2][2]);
 
-        int grad_y= (src_img[index] * gy[0][0]) + (src_img[index+1] * gy[0][1]) + (src_img[index+2] * gy[0][2]) +
-                    (src_img[index] * gy[1][0]) + (src_img[index+1] * gy[1][1]) + (src_img[index+2] * gy[1][2]) +
-                    (src_img[index] * gy[2][0]) + (src_img[index+1] * gy[2][1]) + (src_img[index+2] * gy[2][2]);
+        float grad_y= (src_img[index] * gy[0][0]) + (src_img[index+1] * gy[0][1]) + (src_img[index+2] * gy[0][2]) +
+                      (src_img[index] * gy[1][0]) + (src_img[index+1] * gy[1][1]) + (src_img[index+2] * gy[1][2]) +
+                      (src_img[index] * gy[2][0]) + (src_img[index+1] * gy[2][1]) + (src_img[index+2] * gy[2][2]);
 
-        dst_img[index] = sqrtf(grad_x * grad_x + grad_y * grad_y);
+        float gradient = sqrtf(grad_x * grad_x + grad_y * grad_y);
+
+        if(gradient > 255){
+            gradient = 255;
+        }
+
+        if(gradient < 0){
+            gradient = 0;
+        }
+
+        dst_img[index] = gradient;
     }
 }
 
@@ -94,8 +99,8 @@ cudaError_t testCuErr(cudaError_t dst_img){
 void sobelFilter(cv::Mat *src_img){
 
     cudaFree(0);
-    char *dev_src, *dev_sobel;
-    int img_size = src_img->rows * src_img->cols * sizeof(char);
+    unsigned char *dev_src, *dev_sobel;
+    int img_size = src_img->rows * src_img->cols * sizeof(unsigned char);
 
     dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE);
     dim3 numBlocks(GRID_SIZE, GRID_SIZE);
@@ -110,7 +115,7 @@ void sobelFilter(cv::Mat *src_img){
     auto start = std::chrono::high_resolution_clock::now();
 
     //call kernel
-    kernel_convolution_sobel<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->step1(), src_img->rows);
+    kernel_convolution_sobel<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->cols, src_img->rows);
     testCuErr(cudaGetLastError()); testCuErr(cudaDeviceSynchronize());
 
     //end time 
