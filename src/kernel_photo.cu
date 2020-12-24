@@ -14,6 +14,11 @@
 #define BLOCK_SIZE 32
 #define GRID_SIZE 128
 
+/*Device function*/
+__device__ int absValue(int num){
+    return (num < 0) ? -1 * num : num;
+}
+
 /*Kernel*/
 __global__ void kernel_convolution_sobel(char* src_img, char* dst_img, int width_img, int height_img){
 
@@ -24,32 +29,55 @@ __global__ void kernel_convolution_sobel(char* src_img, char* dst_img, int width
     int num_col = blockIdx.x * blockDim.x + threadIdx.x;
     int num_row = blockIdx.y * blockDim.y + threadIdx.y;
 
-    int index = (num_row * width_img) + num_col;
+    int index = num_row * width_img + num_col;
 
     if(num_col < (width_img - 1) && num_row < (height_img - 1)) {
-        int grad_x = (src_img[index] * gx[0][0]) + (src_img[index] * gx[0][1]) + (src_img[index] * gx[0][2]) +
-                     (src_img[index + 1] * gx[1][0]) + (src_img[index + 1] * gx[1][1]) + (src_img[index + 1] * gx[1][2]) +
-                     (src_img[index + 2] * gx[2][0]) + (src_img[index + 2] * gx[2][1]) + (src_img[index + 2] * gx[2][2]);
+        int grad_x= (src_img[index] * gx[0][0]) + (src_img[index+1] * gx[0][1]) + (src_img[index+2] * gx[0][2]) +
+                    (src_img[index] * gx[1][0]) + (src_img[index+1] * gx[1][1]) + (src_img[index+2] * gx[1][2]) +
+                    (src_img[index] * gx[2][0]) + (src_img[index+1] * gx[2][1]) + (src_img[index+2] * gx[2][2]);
 
-        int grad_y = (src_img[index] * gy[0][0]) + (src_img[index] * gy[0][1]) + (src_img[index] * gy[0][2]) +
-                     (src_img[index + 1] * gy[1][0]) + (src_img[index + 1] * gy[1][1]) + (src_img[index + 1] * gy[1][2]) +
-                     (src_img[index + 2] * gy[2][0]) + (src_img[index + 2] * gy[2][1]) + (src_img[index + 2] * gy[2][2]);
+        int grad_y= (src_img[index] * gy[0][0]) + (src_img[index+1] * gy[0][1]) + (src_img[index+2] * gy[0][2]) +
+                    (src_img[index] * gy[1][0]) + (src_img[index+1] * gy[1][1]) + (src_img[index+2] * gy[1][2]) +
+                    (src_img[index] * gy[2][0]) + (src_img[index+1] * gy[2][1]) + (src_img[index+2] * gy[2][2]);
 
-        dst_img[index] = (char) sqrtf(grad_x * grad_x + grad_y * grad_y);
+        dst_img[index] = sqrtf(grad_x * grad_x + grad_y * grad_y);
     }
 }
 
 /*Main*/
 int main(int argc, char **argv){ 
-    std::string input_img_path = argv[1];
-    cv::Mat src_img = cv::imread(input_img_path, cv::IMREAD_GRAYSCALE);
+    char option;
+    std::cout << "Select one option: photo " << MAGENTA << "(p) " << RESET", camera "  << MAGENTA << "(c) " << RESET "or video " << MAGENTA << "(v) " << RESET << std::endl;
+    std::cin >> option;
 
-    sobelFilterPhoto(&src_img); // apply sobel filter to the photo
+    switch(option){
+        case 'p': //photo
+        {
+            std::string input_img_path;
+            std::cout << "Select a photo to apply the sobel filter:" << std::endl;
+            std::cin >> input_img_path;
+            cv::Mat src_img = cv::imread(input_img_path, cv::IMREAD_GRAYSCALE);
+           
+            if(!src_img.data){  //check input image
+                std::cout << "No image data." << std::endl;
+                std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
+            }else{
+                sobelFilter(&src_img); // apply sobel filter to the photo
 
-    cv::resize(src_img, src_img, cv::Size(1366,768));
-    cv::imshow("CUDA Sobel", src_img);
-    cv::waitKey(0);
+                cv::resize(src_img, src_img, cv::Size(1366,768));
+                cv::imshow("CUDA Sobel", src_img);
+                cv::waitKey(0);
+            }
+        }
+            break;
+        case 'c': // camera
+         
 
+            break;
+        case 'v': //video
+
+            break;
+    }
     return 0;
 }
 
@@ -63,14 +91,7 @@ cudaError_t testCuErr(cudaError_t dst_img){
     return dst_img;
 }
 
-void sobelFilterPhoto(cv::Mat *src_img){
-
-    //check input image
-    if(!src_img->data){
-        std::cout << "No image data." << std::endl;
-        std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
-        exit(-1);
-    }
+void sobelFilter(cv::Mat *src_img){
 
     cudaFree(0);
     char *dev_src, *dev_sobel;
