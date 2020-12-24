@@ -26,7 +26,7 @@ __global__ void kernel_convolution_sobel(unsigned char* src_img, unsigned char* 
 
     int index = num_row * width_img + num_col;
 
-    if(num_col < (width_img - 1) && num_row < (height_img - 1)) {
+    if(num_col < (width_img - 1) && num_row < (height_img - 1)){
         float grad_x= (src_img[index] * gx[0][0]) + (src_img[index+1] * gx[0][1]) + (src_img[index+2] * gx[0][2]) +
                       (src_img[index] * gx[1][0]) + (src_img[index+1] * gx[1][1]) + (src_img[index+2] * gx[1][2]) +
                       (src_img[index] * gx[2][0]) + (src_img[index+1] * gx[2][1]) + (src_img[index+2] * gx[2][2]);
@@ -37,13 +37,8 @@ __global__ void kernel_convolution_sobel(unsigned char* src_img, unsigned char* 
 
         float gradient = sqrtf(grad_x * grad_x + grad_y * grad_y);
 
-        if(gradient > 255){
-            gradient = 255;
-        }
-
-        if(gradient < 0){
-            gradient = 0;
-        }
+        if(gradient > 255)gradient = 255;
+        if(gradient < 0)gradient = 0;
 
         dst_img[index] = gradient;
     }
@@ -51,36 +46,19 @@ __global__ void kernel_convolution_sobel(unsigned char* src_img, unsigned char* 
 
 /*Main*/
 int main(int argc, char **argv){ 
-    char option;
-    std::cout << "Select one option: photo " << MAGENTA << "(p) " << RESET", camera "  << MAGENTA << "(c) " << RESET "or video " << MAGENTA << "(v) " << RESET << std::endl;
+    int option;
+    std::cout << "Select an option: photo " << MAGENTA << "(1) " << RESET", camera "  << MAGENTA << "(2) " << RESET "or video " << MAGENTA << "(3) " << RESET << std::endl;
     std::cin >> option;
 
     switch(option){
-        case 'p': //photo
-        {
-            std::string input_img_path;
-            std::cout << "Select a photo to apply the sobel filter:" << std::endl;
-            std::cin >> input_img_path;
-            cv::Mat src_img = cv::imread(input_img_path, cv::IMREAD_GRAYSCALE);
-           
-            if(!src_img.data){  //check input image
-                std::cout << "No image data." << std::endl;
-                std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
-            }else{
-                sobelFilter(&src_img); // apply sobel filter to the photo
-
-                cv::resize(src_img, src_img, cv::Size(1366,768));
-                cv::imshow("CUDA Sobel", src_img);
-                cv::waitKey(0);
-            }
-        }
+        case 1: 
+            optionPhoto();
             break;
-        case 'c': // camera
-         
-
+        case 2: 
+            optionCamera();
             break;
-        case 'v': //video
-
+        case 3: //video
+            optionVideo();
             break;
     }
     return 0;
@@ -94,6 +72,46 @@ cudaError_t testCuErr(cudaError_t dst_img){
         assert(dst_img == cudaSuccess);
     }
     return dst_img;
+}
+
+void optionPhoto(){
+    std::string input_img_path;
+    std::cout << "Select a photo to apply the sobel filter:" << std::endl;
+    std::cin >> input_img_path;
+    cv::Mat src_img = cv::imread(input_img_path, cv::IMREAD_GRAYSCALE);
+   
+    if(!src_img.data){
+        std::cerr << "ERROR. No image data." << std::endl;
+        std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
+        exit(-1);
+    }else{
+        sobelFilter(&src_img); // apply sobel filter to the photo
+
+        cv::resize(src_img, src_img, cv::Size(1366,768));
+        cv::imshow("CUDA Sobel", src_img);
+        cv::waitKey(0);
+    }
+}
+
+void optionCamera(){
+    cv::VideoCapture camera(0);
+
+    if (!camera.isOpened()) {
+        std::cerr << "ERROR: Could not open camera" << std::endl;
+        exit(-1);
+    }
+
+    while (true){ 
+        cv::Mat cam_frame;
+        camera.read(cam_frame);
+        cv::imshow("CUDA Sobel WebCam", cam_frame);
+        if (cv::waitKey(10) >= 0)
+        break;
+    }
+}
+
+void optionVideo(){
+
 }
 
 void sobelFilter(cv::Mat *src_img){
