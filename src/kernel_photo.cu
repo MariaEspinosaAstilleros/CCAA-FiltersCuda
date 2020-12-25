@@ -4,6 +4,7 @@
 #include <opencv4/opencv2/imgproc/imgproc.hpp>
 
 #include <../include/kernel_photo.h>
+#include <../include/Filter.h>
 #include <../include/colors.h>
 
 #include <stdio.h>
@@ -15,7 +16,7 @@
 #define GRID_SIZE 128
 
 /*Kernel*/
-__global__ void kernel_convolution_sobel(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img){
+__global__ void kernelConvolutionSobel(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img){
 
     //Gradients of the sobel filter
     int gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
@@ -44,78 +45,7 @@ __global__ void kernel_convolution_sobel(unsigned char* src_img, unsigned char* 
     }
 }
 
-/*Main*/
-int main(int argc, char **argv){ 
-    int option;
-    std::cout << "Select an option: photo " << MAGENTA << "(1) " << RESET", camera "  << MAGENTA << "(2) " << RESET "or video " << MAGENTA << "(3) " << RESET << std::endl;
-    std::cin >> option;
-
-    switch(option){
-        case 1: 
-            optionPhoto();
-            break;
-        case 2: 
-            optionCamera();
-            break;
-        case 3: //video
-            optionVideo();
-            break;
-    }
-    return 0;
-}
-
-/* Auxiliar functions*/
-cudaError_t testCuErr(cudaError_t dst_img){
-    if (dst_img != cudaSuccess) {
-        printf("CUDA Runtime Error: %s\n", 
-            cudaGetErrorString(dst_img));
-        assert(dst_img == cudaSuccess);
-    }
-    return dst_img;
-}
-
-void optionPhoto(){
-    std::string input_img_path;
-    std::cout << "Select a photo to apply the sobel filter:" << std::endl;
-    std::cin >> input_img_path;
-    cv::Mat src_img = cv::imread(input_img_path, cv::IMREAD_GRAYSCALE);
-   
-    if(!src_img.data){
-        std::cerr << "ERROR. No image data." << std::endl;
-        std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
-        exit(-1);
-    }else{
-        sobelFilter(&src_img); // apply sobel filter to the photo
-
-        cv::resize(src_img, src_img, cv::Size(1366,768));
-        cv::imshow("CUDA Sobel", src_img);
-        cv::waitKey(0);
-    }
-}
-
-void optionCamera(){
-    cv::VideoCapture camera(0);
-
-    if (!camera.isOpened()) {
-        std::cerr << "ERROR: Could not open camera" << std::endl;
-        exit(-1);
-    }
-
-    while (true){ 
-        cv::Mat cam_frame;
-        camera.read(cam_frame);
-        cv::imshow("CUDA Sobel WebCam", cam_frame);
-        if (cv::waitKey(10) >= 0)
-        break;
-    }
-}
-
-void optionVideo(){
-
-}
-
-void sobelFilter(cv::Mat *src_img){
-
+__host__ void Filter::sobel(cv::Mat *src_img){
     cudaFree(0);
     unsigned char *dev_src, *dev_sobel;
     int img_size = src_img->rows * src_img->cols * sizeof(unsigned char);
@@ -133,7 +63,7 @@ void sobelFilter(cv::Mat *src_img){
     auto start = std::chrono::high_resolution_clock::now();
 
     //call kernel
-    kernel_convolution_sobel<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->cols, src_img->rows);
+    kernelConvolutionSobel<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->cols, src_img->rows);
     testCuErr(cudaGetLastError()); testCuErr(cudaDeviceSynchronize());
 
     //end time 
@@ -149,3 +79,7 @@ void sobelFilter(cv::Mat *src_img){
     //free mem in device
     testCuErr(cudaFree(dev_src)); testCuErr(cudaFree(dev_sobel));
 }
+
+/*__host__ void Filter::other(){
+
+}*/

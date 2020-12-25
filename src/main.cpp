@@ -1,21 +1,34 @@
-#include <opencv4/opencv2/imgproc.hpp> //to cv::cvtColor(src, dst, mode_color, cv::COLOR_RGB2GRAY)
 #include <opencv4/opencv2/imgcodecs.hpp>
-#include <iostream>
-#include <string>
+#include <opencv4/opencv2/core/utility.hpp>
+#include <opencv4/opencv2/highgui.hpp>
+#include <opencv4/opencv2/imgproc/imgproc.hpp>
 
 #include "../include/Filter.h"
+#include <../include/colors.h>
 
-int main(int argc, char** argv){
+#include <stdio.h>
+#include <iostream>
 
-    if(argc != 2){
-        std::cout << "Invalid number of command line arguments..." << std::endl;
-        std::cout << "Usage: " << argv[0] << " [image.png]"<< std::endl;
-        return EXIT_FAILURE;
-    } 
+int main(int argc, char **argv){
+    int option;
+    std::cout << "Select an option: photo " << MAGENTA << "(1) " << RESET", camera "  << MAGENTA << "(2) " << RESET "or video " << MAGENTA << "(3) " << RESET << std::endl;
+    std::cin >> option;
 
-    Filter image(argv[1]);
-    image.sobel_filter();
-    image.write("img/outSobel.jpg");
+    Filter filter(); //create object filter
 
-    return EXIT_SUCCESS;
+    switch(option){
+         
+        case 1: 
+            filter.optionPhoto(filter);
+            break;
+        case 2: 
+            filter.optionCamera();
+            break;
+        case 3: 
+            filter.optionVideo();
+            break;
+    }
+    return 0;
+
 }
+

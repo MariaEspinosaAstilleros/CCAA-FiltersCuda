@@ -1,8 +1,8 @@
 #include <opencv4/opencv2/imgcodecs.hpp>
 #include <iostream>
-#include <cuda.h>
+#include <cuda.h> 
 
-#include "../include/kernel.h"
+#include "../include/kernel_photo.h"
 
 class Filter{
     private:
@@ -10,13 +10,17 @@ class Filter{
         std::string file_path;
 
         //CUDA hosts
-        __host__ void sobel();
+        void sobel(cv::Mat*);
+        void other();
         //void robert_filter();
 
     public:
-        Filter(std::string file_path);//constructor to apply filter in image
+        Filter();//constructor
         //~Filter(); //destructor
 
-        void sobel_filter();
-        void write(std::string file_path);
+        void optionPhoto(Filter filter);
+        void optionCamera();
+        void optionVideo(); 
+        void sobelFilter(cv::Mat);
+        cudaError_t testCuErr(cudaError_t dst_img);
 };

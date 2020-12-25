@@ -1,41 +1,71 @@
 #include <opencv4/opencv2/imgcodecs.hpp>
-#include <iostream>
+#include <opencv4/opencv2/core/utility.hpp>
+#include <opencv4/opencv2/highgui.hpp>
+#include <opencv4/opencv2/imgproc/imgproc.hpp>
 
+#include <../include/kernel_photo.h>
 #include "../include/Filter.h"
-#include "../include/kernel.h"
+#include <../include/colors.h>
 
-/*Read to input image*/
-Filter::Filter(std::string file_path): file_path(file_path){
-    enum cv::ImreadModes mode; 
-    mode = cv::IMREAD_GRAYSCALE;
+#include <stdio.h>
+#include <math.h>
+#include <iostream>
+#include <chrono>
 
-    cv::Mat src_image = cv::imread(file_path, mode); 
+#define BLOCK_SIZE 32
+#define GRID_SIZE 128
 
-    //Convert RGB to gray scale 
-    //cv::cvtColor(src_image, src_image, cv::COLOR_RGB2GRAY);
-
-    //TODO: cuando funcione todo tengo que comprobar que existe la imagen en el dir img
-
-
+cudaError_t Filter::testCuErr(cudaError_t dst_img){
+    if (dst_img != cudaSuccess) {
+        printf("CUDA Runtime Error: %s\n", 
+            cudaGetErrorString(dst_img));
+        assert(dst_img == cudaSuccess);
+    }
+    return dst_img;
 }
 
-/*Apply sobel filter*/
-void Filter::sobel_filter(){
-    sobel();
+void Filter::optionPhoto(Filter filter){
+    std::string input_img_path;
+    std::cout << "Select a photo to apply the sobel filter:" << std::endl;
+    std::cin >> input_img_path;
+    cv::Mat src_img = cv::imread(input_img_path, cv::IMREAD_GRAYSCALE);
+   
+    if(!src_img.data){
+        std::cerr << "ERROR. No image data." << std::endl;
+        std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
+        exit(-1);
+    }else{
+        filter.sobelFilter(src_img); // apply sobel filter to the photo
+
+        cv::resize(src_img, src_img, cv::Size(1366,768));
+        cv::imshow("CUDA Sobel", src_img);
+        cv::waitKey(0);
+    }
 }
 
-/*Write final image*/
-void Filter::write(std::string file_path){
-    bool result = false; 
+void Filter::optionCamera(){
+    cv::VideoCapture camera(0);
 
-    //recorrer los datos para guardarlos en src_image
-
-    try{
-        result = cv::imwrite(file_path, src_image);
-    }catch(const cv::Exception& err){
-        fprintf(stderr, "Exception converting image: %s", err.what());
+    if (!camera.isOpened()) {
+        std::cerr << "ERROR: Could not open camera" << std::endl;
+        exit(-1);
     }
 
-   (result == true) ? "Saved image" : "ERROR. Can't save image"; 
+    while (true){ 
+        cv::Mat cam_frame;
+        
+        //camera.read(cam_frame);
+        camera >> cam_frame;
+        cv::imshow("CUDA Sobel WebCam", cam_frame);
+        if (cv::waitKey(10) >= 0)
+        break;
+    }
+}
 
+void Filter::optionVideo(){
+
+}
+
+void Filter::sobelFilter(cv::Mat src_img){
+    sobel(&src_img);
 }

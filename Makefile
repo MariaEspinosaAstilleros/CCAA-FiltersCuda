@@ -23,7 +23,7 @@ dirs:
 	mkdir obj
 
 $(TARGET): $(OBJS)
-	$(NVCC) $(NVCCFLAGS) $(DIROBJ)$^ -o $@ $(INCLUDES) $(LIBS)
+	$(NVCC) $(NVCCFLAGS) $(DIROBJ)$^  -o $@ $(INCLUDES) $(LIBS)
 
 %.o: $(DIRSRC)/%.cu
 	$(NVCC) $(NVCCFLAGS) -c $^ -o $(DIROBJ)$@ $(INCLUDES)
