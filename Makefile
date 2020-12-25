@@ -12,9 +12,9 @@ NVCCFLAGS = -gencode arch=compute_61,code=sm_61
 INCLUDES = `pkg-config --cflags opencv4` -I/usr/local/cuda/include/ -I$(DIRSRC)
 LIBS = `pkg-config --libs opencv4` -L/usr/local/cuda/libs/ -lcuda -lm 
 
-#SOURCE = main.cpp
+SOURCE = main.cpp Filter.cpp
 KERNEL = kernel_photo.cu
-OBJS = $(KERNEL:.cu=.o) #$(SOURCE:.cpp=.o) $(KERNEL:.cu=.o)
+OBJS =$(SOURCE:.cpp=.o) $(KERNEL:.cu=.o)
 TARGET = filter_sobel
 
 all: dirs $(TARGET) 
@@ -30,6 +30,9 @@ $(TARGET): $(OBJS)
 
 %.o: $(DIRSRC)/%.cpp
 	$(CC) $(CFLAGS) -c $^ -o $(DIROBJ)$@ $(INCLUDES) $(LIBS)
+
+run:
+	./filter_sobel
 		
 clean:
 	touch $(TARGET)
