@@ -1,8 +1,3 @@
-#include <opencv4/opencv2/imgcodecs.hpp>
-#include <opencv4/opencv2/core/utility.hpp>
-#include <opencv4/opencv2/highgui.hpp>
-#include <opencv4/opencv2/imgproc/imgproc.hpp>
-
 #include "../include/Filter.h"
 #include <../include/colors.h>
 
