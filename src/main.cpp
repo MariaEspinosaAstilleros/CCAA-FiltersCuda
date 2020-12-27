@@ -11,10 +11,13 @@
 
 int main(int argc, char **argv){
     int option;
-    std::cout << "Select an option: photo " << MAGENTA << "(1) " << RESET", camera "  << MAGENTA << "(2) " << RESET "or video " << MAGENTA << "(3) " << RESET << std::endl;
+    std::cout << "Select an option: " << std::endl;
+    std::cout << MAGENTA << "1) " << RESET << "Photo" << std::endl;
+    std::cout << MAGENTA << "2) " << RESET << "Webcam" << std::endl;
+    std::cout << MAGENTA << "3) " << RESET << "Video" << std::endl;
     std::cin >> option;
 
-    Filter filter(); //create object filter
+    Filter filter;
 
     switch(option){
          
@@ -22,13 +25,12 @@ int main(int argc, char **argv){
             filter.optionPhoto(filter);
             break;
         case 2: 
-            filter.optionCamera();
+            filter.optionCamera(filter);
             break;
         case 3: 
-            filter.optionVideo();
+            filter.optionVideo(filter);
             break;
     }
     return 0;
-
 }
 

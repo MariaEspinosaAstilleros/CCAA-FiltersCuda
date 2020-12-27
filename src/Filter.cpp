@@ -43,26 +43,53 @@ void Filter::optionPhoto(Filter filter){
     }
 }
 
-void Filter::optionCamera(){
-    cv::VideoCapture camera(0);
+void Filter::optionCamera(Filter filter){
+    cv::VideoCapture camera(0); //first camera or webcam
+    cv::Mat cam_frame;
 
     if (!camera.isOpened()) {
-        std::cerr << "ERROR: Could not open camera" << std::endl;
+        std::cerr << "ERROR: Could not open webcam" << std::endl;
         exit(-1);
     }
 
     while (true){ 
-        cv::Mat cam_frame;
-        
-        //camera.read(cam_frame);
-        camera >> cam_frame;
+        camera.read(cam_frame);
+        cv::cvtColor(cam_frame, cam_frame, cv::COLOR_RGB2GRAY);
+        filter.sobelFilter(cam_frame);
         cv::imshow("CUDA Sobel WebCam", cam_frame);
         if (cv::waitKey(10) >= 0)
         break;
     }
 }
 
-void Filter::optionVideo(){
+void Filter::optionVideo(Filter filter){
+    std::string video_path;
+    std::cout << "Select a video to apply the sobel filter:" << std::endl;
+    std::cin >> video_path;
+
+    cv::VideoCapture video(video_path);
+    cv::Mat frame;
+
+    if(!video.isOpened()){
+        std::cerr << "ERROR. Could not open video" << std::endl; 
+        std::cout << "Enter path that contains the video: " << YELLOW << "img/<name_video>" << RESET << std::endl;
+        exit(-1);
+    }
+    
+    while (true){ 
+        video.read(frame);
+
+        if(frame.empty())
+            break;
+
+        cv::cvtColor(frame, frame, cv::COLOR_RGB2GRAY);
+        filter.sobelFilter(frame);
+        cv::imshow("CUDA Sobel Video", frame);
+        if (cv::waitKey(25) >= 0)
+        break;
+    }
+    
+    cv::destroyAllWindows();
 
 }
 

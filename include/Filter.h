@@ -12,15 +12,11 @@ class Filter{
         //CUDA hosts
         void sobel(cv::Mat*);
         void other();
-        //void robert_filter();
 
     public:
-        Filter();//constructor
-        //~Filter(); //destructor
-
         void optionPhoto(Filter filter);
-        void optionCamera();
-        void optionVideo(); 
+        void optionCamera(Filter filter);
+        void optionVideo(Filter filter); 
         void sobelFilter(cv::Mat);
         cudaError_t testCuErr(cudaError_t dst_img);
 };
