@@ -6,17 +6,16 @@
 
 class Filter{
     private:
-        cv::Mat src_image;
-        std::string file_path;
-
         //CUDA hosts
-        void sobel(cv::Mat*);
-        void other();
+        void applyFilter(cv::Mat* src_img, std::string type_filter);
+        //void other();
 
     public:
-        void optionPhoto(Filter filter);
-        void optionCamera(Filter filter);
-        void optionVideo(Filter filter); 
-        void sobelFilter(cv::Mat);
+        void optionPhoto(Filter filter, std::string type_filter);
+        void optionCamera(Filter filter, std::string type_filter);
+        void optionVideo(Filter filter, std::string type_filter); 
+
+        void callFilter(cv::Mat src_img, std::string type_filter);
+
         cudaError_t testCuErr(cudaError_t dst_img);
 };

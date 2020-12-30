@@ -1,7 +1,7 @@
 {
     "C_Cpp.errorSquiggles": "Disabled",
     "files.associations": {
-        "*.cu": "cpp",
+        "*.cu": "cuda",
         "array": "cpp",
         "atomic": "cpp",
         "bit": "cpp",

@@ -1,5 +1,6 @@
 DIRSRC = ./src/
 DIROBJ = obj/
+DIREXE := exec/
 
 CC = g++
 CFLAGS = -I -c -pthread -std=c++11
@@ -13,15 +14,15 @@ LIBS = `pkg-config --libs opencv4` -L/usr/local/cuda/libs/ -lcuda -lm
 SOURCE = main.cpp Filter.cpp
 KERNEL = kernel_photo.cu
 OBJS = $(SOURCE:.cpp=.o) $(KERNEL:.cu=.o)
-TARGET = filter_sobel
+TARGET = filter
 
 all: dirs $(TARGET)
 
 dirs:
-	mkdir obj
+	mkdir -p $(DIROBJ) $(DIREXE)
 
 $(TARGET): $(OBJS)
-	$(NVCC) $(NVCCFLAGS) $(DIROBJ)main.o $(DIROBJ)Filter.o $(DIROBJ)kernel_photo.o -o $@ $(INCLUDES) $(LIBS)
+	$(NVCC) $(NVCCFLAGS) $(DIROBJ)main.o $(DIROBJ)Filter.o $(DIROBJ)kernel_photo.o -o $(DIREXE)$@ $(INCLUDES) $(LIBS)
 
 %.o: $(DIRSRC)/%.cu
 	$(NVCC) $(NVCCFLAGS) -c $^ -o $(DIROBJ)$@ $(INCLUDES)
@@ -29,9 +30,12 @@ $(TARGET): $(OBJS)
 %.o: $(DIRSRC)/%.cpp
 	$(CC) $(CFLAGS) -c $^ -o $(DIROBJ)$@ $(INCLUDES) $(LIBS)
 
-run:
-	./filter_sobel 
+test-sobel:
+	./$(DIREXE)filter sobel
+
+test-sharpen:
+	./$(DIREXE)filter sharpen
 		
 clean:
 	touch $(TARGET)
-	rm -r $(DIROBJ) $(TARGET)
+	rm -r $(DIREXE) $(DIROBJ) $(TARGET)

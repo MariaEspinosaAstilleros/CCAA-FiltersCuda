@@ -3,14 +3,12 @@
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/imgproc/imgproc.hpp>
 
-#include <../include/kernel_photo.h>
 #include "../include/Filter.h"
 #include <../include/colors.h>
 
 #include <stdio.h>
-#include <math.h>
 #include <iostream>
-#include <chrono>
+#include <string>
 
 #define BLOCK_SIZE 32
 #define GRID_SIZE 128
@@ -24,7 +22,7 @@ cudaError_t Filter::testCuErr(cudaError_t dst_img){
     return dst_img;
 }
 
-void Filter::optionPhoto(Filter filter){
+void Filter::optionPhoto(Filter filter, std::string type_filter){
     std::string input_img_path;
     std::cout << "Select a photo to apply the sobel filter:" << std::endl;
     std::cin >> input_img_path;
@@ -35,15 +33,23 @@ void Filter::optionPhoto(Filter filter){
         std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
         exit(-1);
     }else{
-        filter.sobelFilter(src_img); // apply sobel filter to the photo
-
-        cv::resize(src_img, src_img, cv::Size(1366,768));
-        cv::imshow("CUDA Sobel", src_img);
-        cv::waitKey(0);
+        if(type_filter.compare("sobel") == 0){
+            filter.callFilter(src_img, type_filter);
+            cv::resize(src_img, src_img, cv::Size(1366,768));
+            cv::imshow("CUDA Sobel", src_img);
+            cv::waitKey(0);
+        }
+            
+        if(type_filter.compare("sharpen") == 0){
+            filter.callFilter(src_img, type_filter);
+            cv::resize(src_img, src_img, cv::Size(1366,768));
+            cv::imshow("CUDA Sharpen", src_img);
+            cv::waitKey(0);
+        }    
     }
 }
 
-void Filter::optionCamera(Filter filter){
+void Filter::optionCamera(Filter filter, std::string type_filter){
     cv::VideoCapture camera(0); //first camera or webcam
     cv::Mat cam_frame;
 
@@ -55,14 +61,14 @@ void Filter::optionCamera(Filter filter){
     while (true){ 
         camera.read(cam_frame);
         cv::cvtColor(cam_frame, cam_frame, cv::COLOR_RGB2GRAY);
-        filter.sobelFilter(cam_frame);
+        filter.callFilter(cam_frame, type_filter);
         cv::imshow("CUDA Sobel WebCam", cam_frame);
         if (cv::waitKey(10) >= 0)
         break;
     }
 }
 
-void Filter::optionVideo(Filter filter){
+void Filter::optionVideo(Filter filter, std::string type_filter){
     std::string video_path;
     std::cout << "Select a video to apply the sobel filter:" << std::endl;
     std::cin >> video_path;
@@ -83,7 +89,7 @@ void Filter::optionVideo(Filter filter){
             break;
 
         cv::cvtColor(frame, frame, cv::COLOR_RGB2GRAY);
-        filter.sobelFilter(frame);
+        filter.callFilter(frame, type_filter);
         cv::imshow("CUDA Sobel Video", frame);
         if (cv::waitKey(25) >= 0)
         break;
@@ -93,6 +99,6 @@ void Filter::optionVideo(Filter filter){
 
 }
 
-void Filter::sobelFilter(cv::Mat src_img){
-    sobel(&src_img);
+void Filter::callFilter(cv::Mat src_img, std::string type_filter){
+    applyFilter(&src_img, type_filter);  
 }

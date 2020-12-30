@@ -5,17 +5,15 @@
 
 #include <../include/kernel_photo.h>
 #include <../include/Filter.h>
-#include <../include/colors.h>
 
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
-#include <chrono>
 
 #define BLOCK_SIZE 32
 #define GRID_SIZE 128
 
-/*Kernel*/
+/*Kernels*/
 __global__ void kernelConvolutionSobel(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img){
 
     //Gradients of the sobel filter
@@ -45,10 +43,20 @@ __global__ void kernelConvolutionSobel(unsigned char* src_img, unsigned char* ds
     }
 }
 
-__host__ void Filter::sobel(cv::Mat *src_img){
+__global__ void kernelConvolutionSharpen(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img){
+    int num_row = blockIdx.x * blockDim.x + threadIdx.x;
+    int num_col = blockIdx.y * blockDim.y + threadIdx.y;
+
+    int index = num_row * width_img + num_col;
+}
+
+__host__ void Filter::applyFilter(cv::Mat *src_img, std::string type_filter){
     cudaFree(0);
     unsigned char *dev_src, *dev_sobel;
     int img_size = src_img->rows * src_img->cols * sizeof(unsigned char);
+    cudaEvent_t start, end; 
+
+    testCuErr(cudaEventCreate(&start)); testCuErr(cudaEventCreate(&end));
 
     dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE);
     dim3 numBlocks(GRID_SIZE, GRID_SIZE);
@@ -60,18 +68,25 @@ __host__ void Filter::sobel(cv::Mat *src_img){
     testCuErr(cudaMemcpy(dev_src, src_img->data, img_size, cudaMemcpyHostToDevice));
 
     //start time
-    auto start = std::chrono::high_resolution_clock::now();
+    testCuErr(cudaEventRecord(start));
 
     //call kernel
-    kernelConvolutionSobel<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->cols, src_img->rows);
-    testCuErr(cudaGetLastError()); testCuErr(cudaDeviceSynchronize());
+    if(type_filter.compare("sobel") == 0)
+        kernelConvolutionSobel<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->cols, src_img->rows);
+
+    if(type_filter.compare("sharpen") == 0)
+        kernelConvolutionSharpen<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->cols, src_img->rows);
+
+    testCuErr(cudaGetLastError());
 
     //end time 
-    auto end = std::chrono::high_resolution_clock::now(); 
+    testCuErr(cudaEventRecord(end));
+    testCuErr(cudaEventSynchronize(end));
 
     //diff time
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Elapsed time: " << diff.count() << " seg" << std::endl;
+    float diff = 0;
+    testCuErr(cudaEventElapsedTime(&diff, start, end));
+    std::cout << "Elapsed time: " << diff << " ms" << std::endl; 
 
     //copy data to CPU
     testCuErr(cudaMemcpy(src_img->data, dev_sobel, img_size, cudaMemcpyDeviceToHost));
@@ -79,7 +94,3 @@ __host__ void Filter::sobel(cv::Mat *src_img){
     //free mem in device
     testCuErr(cudaFree(dev_src)); testCuErr(cudaFree(dev_sobel));
 }
-
-/*__host__ void Filter::other(){
-
-}*/
