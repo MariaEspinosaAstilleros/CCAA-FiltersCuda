@@ -12,7 +12,7 @@ INCLUDES = `pkg-config --cflags opencv4` -I/usr/local/cuda/include/ -I$(DIRSRC)
 LIBS = `pkg-config --libs opencv4` -L/usr/local/cuda/libs/ -lcuda -lm 
 
 SOURCE = main.cpp Filter.cpp
-KERNEL = kernel_photo.cu
+KERNEL = kernel.cu
 OBJS = $(SOURCE:.cpp=.o) $(KERNEL:.cu=.o)
 TARGET = filter
 
@@ -22,7 +22,7 @@ dirs:
 	mkdir -p $(DIROBJ) $(DIREXE)
 
 $(TARGET): $(OBJS)
-	$(NVCC) $(NVCCFLAGS) $(DIROBJ)main.o $(DIROBJ)Filter.o $(DIROBJ)kernel_photo.o -o $(DIREXE)$@ $(INCLUDES) $(LIBS)
+	$(NVCC) $(NVCCFLAGS) $(DIROBJ)main.o $(DIROBJ)Filter.o $(DIROBJ)kernel.o -o $(DIREXE)$@ $(INCLUDES) $(LIBS)
 
 %.o: $(DIRSRC)/%.cu
 	$(NVCC) $(NVCCFLAGS) -c $^ -o $(DIROBJ)$@ $(INCLUDES)

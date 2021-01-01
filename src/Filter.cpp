@@ -10,9 +10,6 @@
 #include <iostream>
 #include <string>
 
-#define BLOCK_SIZE 32
-#define GRID_SIZE 128
-
 cudaError_t Filter::testCuErr(cudaError_t dst_img){
     if (dst_img != cudaSuccess) {
         printf("CUDA Runtime Error: %s\n", 
@@ -24,7 +21,7 @@ cudaError_t Filter::testCuErr(cudaError_t dst_img){
 
 void Filter::optionPhoto(Filter filter, std::string type_filter){
     std::string input_img_path;
-    std::cout << "Select a photo to apply the sobel filter:" << std::endl;
+    std::cout << "Select a photo to apply the filter:" << std::endl;
     std::cin >> input_img_path;
     cv::Mat src_img = cv::imread(input_img_path, cv::IMREAD_GRAYSCALE);
    
