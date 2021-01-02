@@ -30,19 +30,10 @@ void Filter::optionPhoto(Filter filter, std::string type_filter){
         std::cout << "Enter path that contains the image: " << YELLOW << "img/<name_image>" << RESET << std::endl;
         exit(-1);
     }else{
-        if(type_filter.compare("sobel") == 0){
-            filter.callFilter(src_img, type_filter);
-            cv::resize(src_img, src_img, cv::Size(1366,768));
-            cv::imshow("CUDA Sobel", src_img);
-            cv::waitKey(0);
-        }
-            
-        if(type_filter.compare("sharpen") == 0){
-            filter.callFilter(src_img, type_filter);
-            cv::resize(src_img, src_img, cv::Size(1366,768));
-            cv::imshow("CUDA Sharpen", src_img);
-            cv::waitKey(0);
-        }    
+        filter.callFilter(src_img, type_filter);
+        cv::resize(src_img, src_img, cv::Size(1366,768));
+        cv::imshow("CUDA Photo", src_img);
+        cv::waitKey(0);    
     }
 }
 
@@ -59,9 +50,9 @@ void Filter::optionCamera(Filter filter, std::string type_filter){
         camera.read(cam_frame);
         cv::cvtColor(cam_frame, cam_frame, cv::COLOR_RGB2GRAY);
         filter.callFilter(cam_frame, type_filter);
-        cv::imshow("CUDA Sobel WebCam", cam_frame);
+        cv::imshow("CUDA WebCam", cam_frame);
         if (cv::waitKey(10) >= 0)
-        break;
+            break;
     }
 }
 
@@ -87,13 +78,13 @@ void Filter::optionVideo(Filter filter, std::string type_filter){
 
         cv::cvtColor(frame, frame, cv::COLOR_RGB2GRAY);
         filter.callFilter(frame, type_filter);
-        cv::imshow("CUDA Sobel Video", frame);
+        cv::resize(frame, frame, cv::Size(1366,768));
+        cv::imshow("CUDA Video", frame);
         if (cv::waitKey(25) >= 0)
-        break;
+            break;
     }
     
     cv::destroyAllWindows();
-
 }
 
 void Filter::callFilter(cv::Mat src_img, std::string type_filter){

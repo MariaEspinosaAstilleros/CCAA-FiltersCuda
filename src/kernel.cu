@@ -5,6 +5,7 @@
 
 #include <../include/kernel_photo.h>
 #include <../include/Filter.h>
+#include <../include/colors.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -17,7 +18,6 @@
 /*Kernels*/
 __global__ void kernelConvolutionSobel(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img){
 
-    //Gradients of the sobel filter
     int sobel_x[KERNEL_SIZE][KERNEL_SIZE] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     int sobel_y[KERNEL_SIZE][KERNEL_SIZE] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
     
@@ -46,8 +46,6 @@ __global__ void kernelConvolutionSobel(unsigned char* src_img, unsigned char* ds
 
 __global__ void kernelConvolutionSharpen(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img){
 
-    //Gradient of the sharpen filter 
-    //int grad[3][3] = {{1, -2, 1}, {-2, 5, -2}, {1, -2, 1}};
     int sharpen[KERNEL_SIZE][KERNEL_SIZE] = {{0, -1, 0}, {-1, 5, -1}, {0, -1, 0}};
 
     int num_row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -100,10 +98,10 @@ __host__ void Filter::applyFilter(cv::Mat *src_img, std::string type_filter){
     testCuErr(cudaEventRecord(end));
     testCuErr(cudaEventSynchronize(end));
 
-    //diff time
-    float diff = 0;
-    testCuErr(cudaEventElapsedTime(&diff, start, end));
-    std::cout << "Elapsed time: " << diff << " ms" << std::endl; 
+    //elapsed time
+    float milliseconds = 0;
+    testCuErr(cudaEventElapsedTime(&milliseconds, start, end));
+    std::cout << CYAN << "Elapsed time: "  << RESET << milliseconds << " ms" << std::endl; 
 
     //copy data to CPU
     testCuErr(cudaMemcpy(src_img->data, dev_sobel, img_size, cudaMemcpyDeviceToHost));
