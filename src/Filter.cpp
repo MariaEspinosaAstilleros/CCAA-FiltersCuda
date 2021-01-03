@@ -10,15 +10,6 @@
 #include <iostream>
 #include <string>
 
-cudaError_t Filter::testCuErr(cudaError_t dst_img){
-    if (dst_img != cudaSuccess) {
-        printf("CUDA Runtime Error: %s\n", 
-            cudaGetErrorString(dst_img));
-        assert(dst_img == cudaSuccess);
-    }
-    return dst_img;
-}
-
 void Filter::optionPhoto(Filter filter, std::string type_filter){
     std::string input_img_path;
     std::cout << "Select a photo to apply the filter:" << std::endl;

@@ -2,13 +2,12 @@
 #include <iostream>
 #include <cuda.h> 
 
-#include "../include/kernel_photo.h"
+#include "../include/kernel.h"
 
 class Filter{
     private:
-        //CUDA hosts
+        //CUDA host
         void applyFilter(cv::Mat* src_img, std::string type_filter);
-        //void other();
 
     public:
         void optionPhoto(Filter filter, std::string type_filter);

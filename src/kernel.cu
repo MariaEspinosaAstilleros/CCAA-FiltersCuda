@@ -3,7 +3,7 @@
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/imgproc/imgproc.hpp>
 
-#include <../include/kernel_photo.h>
+#include <../include/kernel.h>
 #include <../include/Filter.h>
 #include <../include/colors.h>
 
@@ -40,6 +40,8 @@ __global__ void kernelConvolutionSobel(unsigned char* src_img, unsigned char* ds
         if(gradient > 255) gradient = 255;
         if(gradient < 0) gradient = 0;
 
+        __syncthreads();
+
         dst_img[index] = gradient;
     }
 }
@@ -61,8 +63,19 @@ __global__ void kernelConvolutionSharpen(unsigned char* src_img, unsigned char* 
         if(sum > 255) sum = 255;
         if(sum < 0)sum = 0;
 
+        __syncthreads();
+
         dst_img[index] = sum;
     }
+}
+
+cudaError_t Filter::testCuErr(cudaError_t dst_img){
+    if (dst_img != cudaSuccess) {
+        printf("CUDA Runtime Error: %s\n", 
+            cudaGetErrorString(dst_img));
+        assert(dst_img == cudaSuccess);
+    }
+    return dst_img;
 }
 
 __host__ void Filter::applyFilter(cv::Mat *src_img, std::string type_filter){
@@ -79,13 +92,10 @@ __host__ void Filter::applyFilter(cv::Mat *src_img, std::string type_filter){
     testCuErr(cudaMalloc((void**)&dev_src, img_size));
     testCuErr(cudaMalloc((void**)&dev_sobel, img_size));
 
-    //copy data to GPU
     testCuErr(cudaMemcpy(dev_src, src_img->data, img_size, cudaMemcpyHostToDevice));
 
-    //start time
     testCuErr(cudaEventRecord(start));
 
-    //call kernel
     if(type_filter.compare("sobel") == 0)
         kernelConvolutionSobel<<<numBlocks,threadsPerBlock>>>(dev_src, dev_sobel, src_img->cols, src_img->rows);
 
@@ -94,18 +104,14 @@ __host__ void Filter::applyFilter(cv::Mat *src_img, std::string type_filter){
 
     testCuErr(cudaGetLastError());
 
-    //end time 
     testCuErr(cudaEventRecord(end));
     testCuErr(cudaEventSynchronize(end));
 
-    //elapsed time
     float milliseconds = 0;
     testCuErr(cudaEventElapsedTime(&milliseconds, start, end));
     std::cout << CYAN << "Elapsed time: "  << RESET << milliseconds << " ms" << std::endl; 
 
-    //copy data to CPU
     testCuErr(cudaMemcpy(src_img->data, dev_sobel, img_size, cudaMemcpyDeviceToHost));
 
-    //free mem in device
     testCuErr(cudaFree(dev_src)); testCuErr(cudaFree(dev_sobel));
 }

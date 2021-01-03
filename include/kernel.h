@@ -4,7 +4,6 @@
 
 __global__ void kernelConvolutionSobel(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img);
 __global__ void kernelConvolutionSharpen(unsigned char* src_img, unsigned char* dst_img, int width_img, int height_img);
-__host__ void applyFilter(cv::Mat *src_img, std::string type_filter);
 
 
 
