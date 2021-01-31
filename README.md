@@ -25,3 +25,9 @@ Finally, to remove the directories *obj* and *exec* run this command:
 ```shell
 make clean
 ```
+
+### Sobel filter example 
+![Texto alternativo](/img/building.jpg) ![Texto alternativo](/img/building_sobel.png)
+
+### Sharpen filter example
+![Texto alternativo](/img/building.jpg) ![Texto alternativo](/img/building_sharpen.png)
